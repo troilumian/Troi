@@ -1,0 +1,34 @@
+name: Generate Onion Address
+
+on:
+  workflow_dispatch:  # تشغيل يدوي
+
+jobs:
+  generate-onion:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛠️ تجهيز البيئة
+        run: |
+          sudo apt update && sudo apt install -y git make gcc autoconf automake libsodium-dev
+
+      - name: 🔽 تنزيل `mkp224o`
+        run: |
+          git clone --recursive https://github.com/cathugger/mkp224o.git
+          cd mkp224o
+          autoreconf -i
+          ./configure
+          make
+
+      - name: 🎯 تشغيل `mkp224o` لتوليد عنوان واحد يبدأ بـ "dienet"
+        run: |
+          cd mkp224o
+          ./mkp224o dienet -d output -n 1  # توليد عنوان واحد فقط
+
+      - name: 📂 التحقق من الملفات الموجودة
+        run: ls -la mkp224o/output
+
+      - name: 📤 حفظ المفتاح الخاص كـ Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dienet-onion-key
+          path: mkp224o/output/dienet*
